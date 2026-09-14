@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Data Analytics Simulation Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen p-6">
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4">
+      <div>
+        <div class="flex items-center space-x-3">
+          <span class="flex items-center text-xs text-emerald-400 font-mono">
+            <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse mr-2"></span> Streaming Active
+          </span>
+        </div>
+        <h1 class="text-2xl font-bold mt-1 text-slate-100">PySpark Structured Streaming Model</h1>
+        <p class="text-sm text-slate-400">Simulating High-Velocity Stream Ingestion & Real-Time Analytics (Open-Ended Lab Model)</p>
+      </div>
+      <div class="mt-4 md:mt-0 flex items-center space-x-3">
+        <button id="toggleBtn" onclick="toggleSimulation()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition shadow-lg flex items-center space-x-2">
+          <i id="toggleIcon" class="fas fa-pause"></i>
+          <span id="toggleText">Pause Stream</span>
+        </button>
+        <button onclick="resetData()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-medium transition border border-slate-700">
+          Reset Pipeline
+        </button>
+      </div>
+    </header>
+
+    <!-- Key Metrics / 5 Vs of Big Data -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <!-- 1. Volume -->
+      <div class="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Processed (Volume)</p>
+            <h3 id="totalEvents" class="text-xl font-bold text-white mt-1">14,200</h3>
+          </div>
+          <div class="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
+            <i class="fas fa-database text-base"></i>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Spark RDD Stream</p>
+      </div>
+
+      <!-- 2. Velocity -->
+      <div class="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Rate (Velocity)</p>
+            <h3 id="eventsPerSec" class="text-xl font-bold text-emerald-400 mt-1">120 / s</h3>
+          </div>
+          <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
+            <i class="fas fa-bolt text-base"></i>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">1000ms Batching</p>
+      </div>
+
+      <!-- 3. Variety -->
+      <div class="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Streams (Variety)</p>
+            <h3 class="text-xl font-bold text-purple-400 mt-1">4 Channels</h3>
+          </div>
+          <div class="p-2 bg-purple-500/10 text-purple-400 rounded-lg">
+            <i class="fas fa-cubes text-base"></i>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">IoT, Log, Web, App</p>
+      </div>
+
+      <!-- 4. Veracity -->
+      <div class="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Quality (Veracity)</p>
+            <h3 id="anomalyRate" class="text-xl font-bold text-amber-400 mt-1">2.4%</h3>
+          </div>
+          <div class="p-2 bg-amber-500/10 text-amber-400 rounded-lg">
+            <i class="fas fa-shield-virus text-base"></i>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">Outlier Filtering</p>
+      </div>
+
+      <!-- 5. Value -->
+      <div class="bg-slate-800/60 border border-slate-800 p-4 rounded-xl">
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Insight (Value)</p>
+            <h3 id="generatedValue" class="text-xl font-bold text-cyan-400 mt-1">$693.00</h3>
+          </div>
+          <div class="p-2 bg-cyan-500/10 text-cyan-400 rounded-lg">
+            <i class="fas fa-chart-line text-base"></i>
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-2">$0.05/valid record</p>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-slate-800/60 border border-slate-800 p-5 rounded-xl flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-base font-semibold text-slate-200">Real-Time Throughput (Events/sec)</h2>
+          <span class="text-xs font-mono text-slate-400">Sliding Window Aggregate</span>
+        </div>
+        <div class="h-64">
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+
+      <div class="bg-slate-800/60 border border-slate-800 p-5 rounded-xl flex flex-col justify-between">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-base font-semibold text-slate-200">Data Source Distribution</h2>
+          <span class="text-xs font-mono text-slate-400">Grouped By Source</span>
+        </div>
+        <div class="h-64 flex items-center justify-center">
+          <canvas id="doughnutChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Inspector -->
+    <div class="bg-slate-800/60 border border-slate-800 p-5 rounded-xl">
+      <div class="flex justify-between items-center mb-4">
+        <h2 class="text-base font-semibold text-slate-200">Live Micro-Batch Stream Inspector</h2>
+        <span class="text-xs text-indigo-400 font-mono">spark.readStream().format("socket")</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs font-mono">
+          <thead class="bg-slate-900/60 text-slate-400 uppercase tracking-wider">
+            <tr>
+              <th class="p-3">Timestamp</th>
+              <th class="p-3">Source Channel</th>
+              <th class="p-3">Latency (ms)</th>
+              <th class="p-3">Status</th>
+              <th class="p-3">Raw Payload</th>
+            </tr>
+          </thead>
+          <tbody id="logTableBody" class="divide-y divide-slate-800 text-slate-300">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let isRunning = true;
+    let eventCounter = 14200;
+    let anomalyCount = 340;
+    let totalValue = (14200 - 340) * 0.05; // Derived Value: $0.05 per clean record
+    const sources = ['IoT Sensors', 'Server Logs', 'Web Telemetry', 'Mobile App'];
+    const counts = [4200, 3800, 3500, 2700];
+
+    const ctxLine = document.getElementById('lineChart').getContext('2d');
+    const lineChart = new Chart(ctxLine, {
+      type: 'line',
+      data: {
+        labels: Array.from({length: 12}, (_, i) => `${i*5}s ago`).reverse(),
+        datasets: [{
+          label: 'Processed Rows/sec',
+          data: [110, 115, 125, 118, 122, 130, 128, 120, 124, 119, 121, 125],
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99, 102, 241, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }
+        }
+      }
+    });
+
+    const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+    const doughnutChart = new Chart(ctxDoughnut, {
+      type: 'doughnut',
+      data: {
+        labels: sources,
+        datasets: [{
+          data: counts,
+          backgroundColor: ['#6366f1', '#10b981', '#a855f7', '#f59e0b'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } }
+        }
+      }
+    });
+
+    function toggleSimulation() {
+      isRunning = !isRunning;
+      const btnText = document.getElementById('toggleText');
+      const btnIcon = document.getElementById('toggleIcon');
+      if (isRunning) {
+        btnText.innerText = 'Pause Stream';
+        btnIcon.className = 'fas fa-pause';
+      } else {
+        btnText.innerText = 'Resume Stream';
+        btnIcon.className = 'fas fa-play';
+      }
+    }
+
+    function resetData() {
+      eventCounter = 0;
+      anomalyCount = 0;
+      totalValue = 0;
+      document.getElementById('totalEvents').innerText = '0';
+      document.getElementById('generatedValue').innerText = '$0.00';
+      document.getElementById('anomalyRate').innerText = '0.0%';
+      document.getElementById('logTableBody').innerHTML = '';
+    }
+
+    setInterval(() => {
+      if (!isRunning) return;
+
+      const deltaEvents = Math.floor(Math.random() * 20) + 110;
+      eventCounter += deltaEvents;
+      document.getElementById('totalEvents').innerText = eventCounter.toLocaleString();
+      document.getElementById('eventsPerSec').innerText = `${deltaEvents} / s`;
+
+      const data = lineChart.data.datasets[0].data;
+      data.shift();
+      data.push(deltaEvents);
+      lineChart.update();
+
+      const randomIdx = Math.floor(Math.random() * 4);
+      doughnutChart.data.datasets[0].data[randomIdx] += deltaEvents;
+      doughnutChart.update();
+
+      const tableBody = document.getElementById('logTableBody');
+      const now = new Date().toISOString().split('T')[1].slice(0, 8);
+      const source = sources[randomIdx];
+      const latency = Math.floor(Math.random() * 40) + 10;
+      const isAnomaly = Math.random() < 0.05;
+      
+      if (isAnomaly) {
+        anomalyCount++;
+      } else {
+        totalValue += deltaEvents * 0.05; // Accrue value on clean records
+      }
+
+      document.getElementById('anomalyRate').innerText = `${((anomalyCount / (eventCounter || 1)) * 100).toFixed(1)}%`;
+      document.getElementById('generatedValue').innerText = `$${totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-800/40 transition';
+      tr.innerHTML = `
+        <td class="p-3 text-slate-400">${now}</td>
+        <td class="p-3 text-indigo-400 font-semibold">${source}</td>
+        <td class="p-3">${latency} ms</td>
+        <td class="p-3">
+          <span class="px-2 py-0.5 text-[10px] font-semibold rounded ${isAnomaly ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+            ${isAnomaly ? 'ANOMALY DETECTED' : 'OK'}
+          </span>
+        </td>
+        <td class="p-3 text-slate-500 text-[11px] truncate max-w-xs">{ "event_id": "${Math.random().toString(36).substring(7)}", "val": ${(Math.random() * 100).toFixed(2)} }</td>
+      `;
+
+      tableBody.insertBefore(tr, tableBody.firstChild);
+      if (tableBody.children.length > 7) {
+        tableBody.removeChild(tableBody.lastChild);
+      }
+    }, 1500);
+  </script>
+</body>
+</html>
